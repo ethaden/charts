@@ -39,10 +39,16 @@ data:
     TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
     echo "test mysql connection"
-    if [ -z "$(mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u ${MYSQL_USERNAME} -B -N -e 'SHOW DATABASES;')" ]; then
-      echo "mysql connection failed! exiting..."
-      exit 1
-    fi
+    attempt=1
+    max_attempts=10
+    until [ -n "$(mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u ${MYSQL_USERNAME} -B -N -e 'SHOW DATABASES;')" ]; do
+      if ((attempt==max_attempts)); then
+        echo "mysql connection failed! exiting..."
+        exit 1
+      fi
+      ((attempt++))
+      sleep 1
+    done
 
     echo "started" > ${BACKUP_DIR}/${TIMESTAMP}.state
 
